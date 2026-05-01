@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ─── 1. Checkout ───────────────────────────────────────────────
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # ─── 2. Java 17 (required by AGP 8.x + Kotlin 2.x) ────────────
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # ─── 3. Flutter (pinned version — avoids surprise breakages) ───
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -26,39 +29,55 @@ jobs:
           channel: stable
           cache: true
 
+      # ─── 4. local.properties (Gradle needs this) ───────────────────
       - name: Create local.properties
         run: |
           echo "flutter.sdk=$FLUTTER_ROOT"            >  android/local.properties
           echo "sdk.dir=${ANDROID_HOME:-$ANDROID_SDK_ROOT}" >> android/local.properties
 
-      - name: Setup Gradle (system)
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 7.5
+      # ─── 5. gradlew permissions ─────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
-      - name: Regenerate gradle wrapper using system gradle
+      # ─── 6. Verify critical files ───────────────────────────────────
+      - name: Verify critical files
         run: |
-          cd android
-          rm -rf gradle/wrapper
-          gradle wrapper --gradle-version 7.5 --distribution-type all
-          chmod +x gradlew
-          cd ..
+          echo "=== Flutter version ==="
+          flutter --version
+          echo ""
+          echo "=== gradle-wrapper.properties ==="
+          cat android/gradle/wrapper/gradle-wrapper.properties
+          echo ""
+          echo "=== google-services.json ==="
+          if [ -f "android/app/google-services.json" ]; then
+            echo "✓ موجود"
+          else
+            echo "✗ مفقود — الـ build هيفشل"
+            exit 1
+          fi
+          echo ""
+          echo "=== assets ==="
+          ls -la assets/
+          ls -la assets/stickers/ 2>/dev/null || echo "stickers dir فاضية أو مش موجودة"
 
-      - name: Clean Gradle caches
-        run: rm -rf ~/.gradle/caches/ android/.gradle
-
+      # ─── 7. Flutter pub get ─────────────────────────────────────────
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      # ─── 8. Build release APK ───────────────────────────────────────
+      #   --no-tree-shake-icons   → يمنع خطأ "unused icon" في MaterialIcons
+      #   --split-per-abi         → APK أصغر لكل architecture منفصلة
       - name: Build release APK
         run: |
           flutter build apk --release \
             --no-tree-shake-icons \
             --split-per-abi
 
+      # ─── 9. List output APKs ────────────────────────────────────────
       - name: List built APKs
         run: ls -lh build/app/outputs/flutter-apk/
 
+      # ─── 10. Upload all APKs ────────────────────────────────────────
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
