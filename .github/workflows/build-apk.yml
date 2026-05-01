@@ -31,22 +31,21 @@ jobs:
           echo "flutter.sdk=$FLUTTER_ROOT"            >  android/local.properties
           echo "sdk.dir=${ANDROID_HOME:-$ANDROID_SDK_ROOT}" >> android/local.properties
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      - name: Setup Gradle (system)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.5
 
-      - name: Download missing gradle-wrapper.jar and recreate wrapper
+      - name: Regenerate gradle wrapper using system gradle
         run: |
           cd android
-          mkdir -p gradle/wrapper
-          curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v7.5.0/gradle/wrapper/gradle-wrapper.jar
+          rm -rf gradle/wrapper
+          gradle wrapper --gradle-version 7.5 --distribution-type all
           chmod +x gradlew
-          ./gradlew wrapper --gradle-version 7.5 --distribution-type all
           cd ..
 
       - name: Clean Gradle caches
-        run: |
-          rm -rf ~/.gradle/caches/
-          rm -rf android/.gradle
+        run: rm -rf ~/.gradle/caches/ android/.gradle
 
       - name: Install Flutter dependencies
         run: flutter pub get
