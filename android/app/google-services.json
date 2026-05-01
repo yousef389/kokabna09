@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "908192607676",
+    "project_id": "application-98c5d",
+    "storage_bucket": "application-98c5d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:908192607676:android:ada8f5fa4f7999a7398fb9",
+        "android_client_info": {
+          "package_name": "com.onlyus.privateworld"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGv7GgTsG--beVLwXSLOi8eqMtCU2q3c8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

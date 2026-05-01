@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function coupleDoc() {
+      return firestore.get(/databases/(default)/documents/couple/main);
+    }
+    function isMember() {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/couple/main)
+        && request.auth.uid in coupleDoc().data.memberUids;
+    }
+    function isAdmin() {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/couple/main)
+        && request.auth.uid == coupleDoc().data.adminUid;
+    }
+    function partnerUploadsAllowed() {
+      return coupleDoc().data.allowPartnerUploads == true;
+    }
+    match /{coupleId}/{folder}/{allPaths=**} {
+      allow read: if isMember() && coupleId == 'main';
+      allow write: if isMember()
+        && coupleId == 'main'
+        && (isAdmin() || partnerUploadsAllowed());
+      allow delete: if isAdmin() && coupleId == 'main';
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# انسخ هذا الملف إلى local.properties إذا كنت تبني Android يدويًا عبر Gradle.
+# عند استخدام flutter build غالبًا Flutter ينشئ الملف تلقائيًا.
+flutter.sdk=/path/to/flutter
+sdk.dir=/path/to/Android/Sdk
